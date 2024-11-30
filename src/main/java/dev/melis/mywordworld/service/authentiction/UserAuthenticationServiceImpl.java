@@ -1,6 +1,7 @@
 package dev.melis.mywordworld.service.authentiction;
 
 import dev.melis.mywordworld.config.JwtService;
+import dev.melis.mywordworld.model.User;
 import dev.melis.mywordworld.repository.UserRepository;
 import dev.melis.mywordworld.support.passwordencoder.PasswordEncoderAdaptor;
 import dev.melis.mywordworld.support.result.CreationResult;
@@ -12,6 +13,7 @@ public class UserAuthenticationServiceImpl implements UserAuthenticationService 
     private final UserRepository userRepository;
     private final PasswordEncoderAdaptor passwordEncoderAdaptor;
     private final JwtService jwtService;
+    private static Long userId;
 
     public UserAuthenticationServiceImpl(UserRepository userRepository, PasswordEncoderAdaptor passwordEncoderAdaptor, JwtService jwtService) {
         this.userRepository = userRepository;
@@ -29,6 +31,7 @@ public class UserAuthenticationServiceImpl implements UserAuthenticationService 
             return CreationResult.failure(OperationFailureReason.UNAUTHORIZED,"Incorrect password");
         }
         var jwtToken = jwtService.generateToken(user.get());
+        userId = user.get().getId();
         return CreationResult.success(jwtToken);
     }
 }
