@@ -11,12 +11,14 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 @Service
 public class JwtService {
-    private static final String SECRET_KEY = "VWssT0fu8nLSUc2i0o/gfClroiai4C/TjiBwCYibhJTdWG66KaxMKL51nlXEC8WL4uD9b/l1oXylDv1CRhmHxJdMlz3rv7k8V9W3NlEWy7Y+eRncIhqtx9BIWS0CW1NPqHpxfgylmAFTZkI/nr3EVT9K7zLW4FK2wr5mR6F0Qtw=";
+    @Value("${SECRET_KEY}")
+    private static String SECRET_KEY;
 
     public String extractUserName(String token){
         return extractClaim(token,Claims::getSubject);
