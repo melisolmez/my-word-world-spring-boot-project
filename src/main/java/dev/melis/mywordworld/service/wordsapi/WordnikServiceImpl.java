@@ -3,24 +3,28 @@ package dev.melis.mywordworld.service.wordsapi;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.melis.mywordworld.config.UserSession;
 import dev.melis.mywordworld.model.Word;
-import dev.melis.mywordworld.repository.WordRepository;
-import dev.melis.mywordworld.service.authentiction.UserAuthenticationServiceImpl;
+import dev.melis.mywordworld.repository.WordRepository
+import dev.melis.mywordworld.support.result.CreationResult;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 @Service
 public class WordnikServiceImpl implements WordnikService {
 
-    private final String apiKey="";
-    private final String baseUrl="https://api.wordnik.com/";
+    @Value("${wordnik.api.key}")
+    private String apiKey;
 
     private final WebClient webClient;
     private final WordRepository repository;
+    private final ObjectMapper mapper;
 
-    public WordnikServiceImpl(WebClient webClient, WordRepository repository) {
+    public WordnikServiceImpl(WebClient webClient, WordRepository repository, ObjectMapper objectMapper) {
         this.repository = repository;
-        this.webClient = WebClient.builder().baseUrl(baseUrl).build();
+        this.webClient = webClient;
+        this.mapper = objectMapper;
     }
 
     @Override
@@ -29,7 +33,6 @@ public class WordnikServiceImpl implements WordnikService {
             String definitionUrl = String.format("/word.json/%s/definitions?limit=1&api_key=%s", word, apiKey);
             String response = getApiResponse(definitionUrl);
 
-            ObjectMapper mapper = new ObjectMapper();
             JsonNode jsonNode = mapper.readTree(response);
             if(jsonNode.isArray() && !jsonNode.isEmpty()) {
                 return jsonNode.get(0).get("text").asText();
@@ -46,9 +49,8 @@ public class WordnikServiceImpl implements WordnikService {
             String exampleUrl = String.format("/word.json/%s/examples?limit=1&api_key=%s", word, apiKey);
             String response = getApiResponse(exampleUrl);
 
-            ObjectMapper mapper = new ObjectMapper();
             JsonNode jsonNode = mapper.readTree(response);
-            if(jsonNode.has("examples") && !jsonNode.get("examples").isArray() && !jsonNode.get("examples").isEmpty()) {
+            if(jsonNode.has("examples") && jsonNode.get("examples").isArray() && !jsonNode.get("examples").isEmpty()) {
                 return jsonNode.get("examples").get(0).get("text").asText();
             }
 
@@ -64,8 +66,7 @@ public class WordnikServiceImpl implements WordnikService {
             String pronunciationUrl = String.format("/word.json/%s/audio?limit=1&api_key=%s", word, apiKey);
             String response = getApiResponse(pronunciationUrl);
 
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode rootNode = objectMapper.readTree(response);
+            JsonNode rootNode = mapper.readTree(response);
 
             if (rootNode.isArray() && !rootNode.isEmpty()) {
                 return rootNode.get(0).get("fileUrl").asText();
@@ -77,7 +78,7 @@ public class WordnikServiceImpl implements WordnikService {
     }
 
     @Override
-    public void getAndSaveWordInformation(String word) {
+    public WordnikServiceDTO getAndSaveWordInformation(String word, UserSession userSession) {
         String wordDefinition = getWordDefinition(word);
         String wordExample = getWordExample(word);
         String wordPronunciation = getWordPronunciationAudio(word);
@@ -87,7 +88,16 @@ public class WordnikServiceImpl implements WordnikService {
         words.setDefinition(wordDefinition);
         words.setExample(wordExample);
         words.setAudioFileName(wordPronunciation);
+        words.setUser(userSession.id());
+
+        WordnikServiceDTO wordnikServiceDTO = new WordnikServiceDTO()
+                .setWord(word)
+                .setDefinition(wordDefinition)
+                .setExample(wordExample)
+                .setPronunciation(wordPronunciation);
+
         repository.save(words);
+        return wordnikServiceDTO;
 
     }
 
