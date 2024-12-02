@@ -1,7 +1,6 @@
 package dev.melis.mywordworld.service.authentiction;
 
 import dev.melis.mywordworld.config.JwtService;
-import dev.melis.mywordworld.model.User;
 import dev.melis.mywordworld.repository.UserRepository;
 import dev.melis.mywordworld.support.passwordencoder.PasswordEncoderAdaptor;
 import dev.melis.mywordworld.support.result.CreationResult;
