@@ -3,7 +3,6 @@ package dev.melis.mywordworld.model;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import lombok.Data;
 
@@ -17,14 +16,9 @@ public class Word {
     private String example;
     private String definition;
     private String story;
-    @ManyToOne
+
     @JoinColumn(name = "user_id")
-    private User user;
-
-    @Lob
-    private byte[] audioData;
-
-    private String audioMimeType;
+    private Long user;
     private String audioFileName;
 
 }
