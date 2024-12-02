@@ -2,6 +2,8 @@ package dev.melis.mywordworld.config;
 
 import java.io.IOException;
 
+import dev.melis.mywordworld.model.User;
+import dev.melis.mywordworld.repository.UserRepository;
 import jakarta.annotation.Nonnull;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -19,10 +21,12 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class JwtAuthenticationFilter  extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
+    private final UserRepository userRepository;
 
-    public JwtAuthenticationFilter(JwtService jwtService, UserDetailsService userDetailsService) {
+    public JwtAuthenticationFilter(JwtService jwtService, UserDetailsService userDetailsService, UserRepository userRepository) {
         this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -44,6 +48,9 @@ public class JwtAuthenticationFilter  extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
         }
+        User user= userRepository.findByEmail(userEmail).get();
+        var session = new UserSession(user.getId(), userEmail,user);
+        request.setAttribute("SESSION", session);
         filterChain.doFilter(request, response);
     }
 }
