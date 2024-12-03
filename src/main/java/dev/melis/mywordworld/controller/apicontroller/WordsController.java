@@ -1,5 +1,6 @@
 package dev.melis.mywordworld.controller.apicontroller;
 
+import dev.melis.mywordworld.config.UserSession;
 import dev.melis.mywordworld.service.wordsapi.WordnikService;
 import dev.melis.mywordworld.service.wordsapi.WordnikServiceDTO;
 import org.springframework.http.HttpStatus;
@@ -19,9 +20,9 @@ public class WordsController {
         this.wordnikService = wordnikService;
     }
     @GetMapping("/word/information")
-    public ResponseEntity<?> getWordInformation(@RequestParam String word) {
+    public ResponseEntity<?> getWordInformation(@RequestParam String word, UserSession userSession) {
         try{
-            WordnikServiceDTO wordInfo = wordnikService.getAndSaveWordInformation(word);
+            WordnikServiceDTO wordInfo = wordnikService.getAndSaveWordInformation(word,userSession);
             return ResponseEntity.ok(wordInfo);
         }catch(Exception e){
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
