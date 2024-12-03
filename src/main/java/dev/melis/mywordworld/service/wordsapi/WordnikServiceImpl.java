@@ -1,12 +1,13 @@
 package dev.melis.mywordworld.service.wordsapi;
 
+import java.util.Optional;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.melis.mywordworld.config.UserSession;
 import dev.melis.mywordworld.model.Word;
-import dev.melis.mywordworld.repository.WordRepository
-import dev.melis.mywordworld.support.result.CreationResult;
+import dev.melis.mywordworld.repository.WordRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -79,26 +80,45 @@ public class WordnikServiceImpl implements WordnikService {
 
     @Override
     public WordnikServiceDTO getAndSaveWordInformation(String word, UserSession userSession) {
+        if (word == null || word.isBlank()) {
+            throw new IllegalArgumentException("Word must not be null or empty");
+        }
+        if (userSession == null || userSession.id() == null) {
+            throw new IllegalArgumentException("User session is invalid");
+        }
+
+        Optional<Word> exist = repository.findByWord(word);
+        if(exist.isPresent()) {
+            var existingWord = exist.get();
+            return buildWordnikServiceDTO(existingWord.getWord(),existingWord.getDefinition(),existingWord.getExample(),existingWord.getAudioFileName());
+
+        }
         String wordDefinition = getWordDefinition(word);
         String wordExample = getWordExample(word);
         String wordPronunciation = getWordPronunciationAudio(word);
+
+        if (wordDefinition == null || wordExample == null || wordPronunciation == null) {
+            throw new RuntimeException("Failed to fetch word information");
+        }
 
         var words = new Word();
         words.setWord(word);
         words.setDefinition(wordDefinition);
         words.setExample(wordExample);
         words.setAudioFileName(wordPronunciation);
-        words.setUser(userSession.id());
-
-        WordnikServiceDTO wordnikServiceDTO = new WordnikServiceDTO()
-                .setWord(word)
-                .setDefinition(wordDefinition)
-                .setExample(wordExample)
-                .setPronunciation(wordPronunciation);
+        words.setUserId(userSession.id());
 
         repository.save(words);
-        return wordnikServiceDTO;
+        return buildWordnikServiceDTO(word,wordDefinition,wordExample,wordPronunciation);
 
+    }
+
+    private WordnikServiceDTO buildWordnikServiceDTO(String word, String definition, String example, String pronunciation) {
+        return new WordnikServiceDTO()
+                .setWord(word)
+                .setDefinition(definition)
+                .setExample(example)
+                .setPronunciation(pronunciation);
     }
 
     private String getApiResponse(String url){
