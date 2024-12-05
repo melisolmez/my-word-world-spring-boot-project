@@ -12,7 +12,6 @@ public class UserAuthenticationServiceImpl implements UserAuthenticationService 
     private final UserRepository userRepository;
     private final PasswordEncoderAdaptor passwordEncoderAdaptor;
     private final JwtService jwtService;
-    private static Long userId;
 
     public UserAuthenticationServiceImpl(UserRepository userRepository, PasswordEncoderAdaptor passwordEncoderAdaptor, JwtService jwtService) {
         this.userRepository = userRepository;
@@ -30,7 +29,6 @@ public class UserAuthenticationServiceImpl implements UserAuthenticationService 
             return CreationResult.failure(OperationFailureReason.UNAUTHORIZED,"Incorrect password");
         }
         var jwtToken = jwtService.generateToken(user.get());
-        userId = user.get().getId();
         return CreationResult.success(jwtToken);
     }
 }
