@@ -15,7 +15,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 @Service
 public class WordnikServiceImpl implements WordnikService {
 
-    @Value("${wordnik.api.key}")
+    @Value("${API_KEY}")
     private String apiKey;
 
     private final WebClient webClient;
